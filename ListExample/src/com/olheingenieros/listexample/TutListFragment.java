@@ -36,6 +36,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.View;
@@ -44,8 +47,10 @@ import android.widget.ListView;
 import com.olheingenieros.listexample.provider.TutListDatabase;
 import com.olheingenieros.listexample.provider.TutListProvider;
 
-public class TutListFragment extends ListFragment {
+public class TutListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private OnTutSelectedListener tutSelectedListener;
+    private static final int TUTORIAL_LIST_LOADER = 0x01;
+    private SimpleCursorAdapter adapter;
 
     @Override
     public void onListItemClick(final ListView l, final View v, final int position, final long id) {
@@ -65,9 +70,6 @@ public class TutListFragment extends ListFragment {
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final String[] projection = {
-                TutListDatabase.ID, TutListDatabase.COL_TITLE
-        };
         final String[] uiBindFrom = {
                 TutListDatabase.COL_TITLE
         };
@@ -75,11 +77,13 @@ public class TutListFragment extends ListFragment {
                 R.id.title
         };
 
-        final Cursor c = getActivity().managedQuery(TutListProvider.CONTENT_URI, projection, null,
-                null, null);
+        // Create and init cursor loader
+        getLoaderManager().initLoader(TUTORIAL_LIST_LOADER, null, this);
 
-        final CursorAdapter adapter = new SimpleCursorAdapter(getActivity()
-                .getApplicationContext(), R.layout.list_item, c, uiBindFrom, uiBindTo);
+        adapter = new SimpleCursorAdapter(
+                getActivity().getApplicationContext(), R.layout.list_item,
+                null, uiBindFrom, uiBindTo,
+                CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
         setListAdapter(adapter);
     }
@@ -97,5 +101,49 @@ public class TutListFragment extends ListFragment {
             throw new ClassCastException(activity.toString()
                     + " must implement OnTutSelectedListener");
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * android.support.v4.app.LoaderManager.LoaderCallbacks#onCreateLoader(int,
+     * android.os.Bundle)
+     */
+    @Override
+    public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
+        final String[] projection = {
+                TutListDatabase.ID, TutListDatabase.COL_TITLE
+        };
+
+        final CursorLoader cursorLoader = new CursorLoader(getActivity(),
+                TutListProvider.CONTENT_URI, projection, null, null, null);
+        return cursorLoader;
+    }
+
+    /**
+     * Assigns the new cursor but doesn't close the previous one so the system
+     * optimizes it where appropiate
+     * 
+     * @see android.support.v4.app.LoaderManager.LoaderCallbacks#onLoadFinished(android
+     *      .support.v4.content.Loader, java.lang.Object)
+     */
+    @Override
+    public void onLoadFinished(final Loader<Cursor> loader, final Cursor cursor) {
+        adapter.swapCursor(cursor);
+    }
+
+    /**
+     * This method is triggered when the loader is being reset and the loader
+     * data is not avaible.
+     * 
+     * @see android.support.v4.app.LoaderManager.LoaderCallbacks#onLoaderReset(android
+     *      .support.v4.content.Loader)
+     */
+    @Override
+    public void onLoaderReset(final Loader<Cursor> loader) {
+
+        // Clear the cursor we were using
+        adapter.swapCursor(null);
+
     }
 }
