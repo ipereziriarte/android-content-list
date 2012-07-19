@@ -32,6 +32,7 @@
 package com.olheingenieros.listexample;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -41,11 +42,15 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 
 import com.olheingenieros.listexample.provider.TutListDatabase;
 import com.olheingenieros.listexample.provider.TutListProvider;
+import com.olheingenieros.listexample.sync.TutListDownloaderService;
 
 public class TutListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private OnTutSelectedListener tutSelectedListener;
@@ -102,6 +107,32 @@ public class TutListFragment extends ListFragment implements LoaderManager.Loade
                     + " must implement OnTutSelectedListener");
         }
     }
+
+    // options menu
+
+    private int refreshMenuId;
+
+    @Override
+    public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
+        final Intent intent = new Intent(getActivity().getApplicationContext(),
+                TutListDownloaderService.class);
+        intent.setData(Uri
+                .parse("http://feeds.feedburner.com/MobileTuts?format=xml"));
+        inflater.inflate(R.menu.options_menu, menu);
+        final MenuItem refresh = menu.findItem(R.id.refresh_option_item);
+        refresh.setIntent(intent);
+        refreshMenuId = refresh.getItemId();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        if (item.getItemId() == refreshMenuId) {
+            getActivity().startService(item.getIntent());
+        }
+        return true;
+    }
+
+    // LoaderManager.LoaderCallBacks<Cursor> methods
 
     /*
      * (non-Javadoc)

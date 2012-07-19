@@ -15,6 +15,9 @@
  */
 package com.olheingenieros.listexample.provider;
 
+import static com.olheingenieros.listexample.utils.LogUtils.LOGI;
+import static com.olheingenieros.listexample.utils.LogUtils.makeLogTag;
+
 import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -22,6 +25,7 @@ import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
@@ -35,6 +39,7 @@ import android.text.TextUtils;
  */
 public class TutListProvider extends ContentProvider {
     private TutListDatabase mDB;
+    private static final String TAG = makeLogTag(TutListProvider.class);
 
     // URIs to identify the data we want to query
     private static final String AUTHORITY = "com.olheingenieros.listexample.provider.TutListProvider";
@@ -119,14 +124,20 @@ public class TutListProvider extends ContentProvider {
             throw new IllegalArgumentException("Invalid URI for insert");
         }
         final SQLiteDatabase sqlDB = mDB.getWritableDatabase();
-        final long newID = sqlDB.insert(TutListDatabase.TABLE_DATOS, null, values);
-        if (newID > 0) {
-            final Uri newUri = ContentUris.withAppendedId(uri, newID);
-            getContext().getContentResolver().notifyChange(uri, null);
-            return newUri;
-        } else {
-            throw new SQLException("Failed to insert row into " + uri);
+        try {
+            final long newID = sqlDB.insertOrThrow(TutListDatabase.TABLE_DATOS, null, values);
+            if (newID > 0) {
+                final Uri newUri = ContentUris.withAppendedId(uri, newID);
+                getContext().getContentResolver().notifyChange(uri, null);
+                return newUri;
+            } else {
+                throw new SQLException("Failed to insert row into " + uri);
+            }
+
+        } catch (final SQLiteConstraintException e) {
+            LOGI(TAG, "Ignoring constraint failure.");
         }
+        return null;
     }
 
     /*

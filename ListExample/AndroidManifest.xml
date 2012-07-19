@@ -28,6 +28,7 @@
 			android:name="TutViewerActivity"
 			android:label="Tutorial Viewer" />
 		<provider android:authorities="@string/authorities" android:multiprocess="true" android:name=".provider.TutListProvider"></provider>
+		<service android:name=".sync.TutListDownloaderService"></service>
 	</application>
 
 </manifest>

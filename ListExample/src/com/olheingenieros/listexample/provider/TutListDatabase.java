@@ -46,7 +46,7 @@ public class TutListDatabase extends SQLiteOpenHelper {
     private static final String CREATE_TABLE_DATOS = "CREATE TABLE " + TABLE_DATOS
             + " (" + ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + COL_TITLE + " TEXT NOT NULL, "
-            + COL_URL + " TEXT NOT NULL);";
+            + COL_URL + " TEXT UNIQUE NOT NULL);";
     private static final String DB_SCHEMA = CREATE_TABLE_DATOS;
 
     /**
