@@ -31,17 +31,43 @@
 
 package com.olheingenieros.listexample;
 
+import static com.olheingenieros.listexample.utils.LogUtils.LOGI;
+import static com.olheingenieros.listexample.utils.LogUtils.isLogable;
+import static com.olheingenieros.listexample.utils.LogUtils.makeLogTag;
+
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.v4.app.FragmentActivity;
 
 public class TutListActivity extends FragmentActivity implements
 TutListFragment.OnTutSelectedListener {
+
+    private static final String TAG = makeLogTag(TutListActivity.class);
+    private static final Boolean DEVELOPER_MODE = isLogable();
+
     @Override
     public void onCreate(final Bundle savedInstanceState) {
+        if (DEVELOPER_MODE) {
+            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+            .detectDiskReads()
+            .detectDiskWrites()
+            .detectNetwork() // or .detectAll() for all detectable
+            // problems
+            .penaltyLog()
+            .build());
+
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+            .detectLeakedSqlLiteObjects()
+            .penaltyLog()
+            .penaltyDeath()
+            .build());
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.tutlist_fragment);
+        LOGI(TAG, "Activity Created");
+
     }
 
     @Override
