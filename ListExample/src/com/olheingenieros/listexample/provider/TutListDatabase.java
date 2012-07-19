@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.olheingenieros.listexample;
+package com.olheingenieros.listexample.provider;
 
 import static com.olheingenieros.listexample.utils.LogUtils.LOGW;
 import static com.olheingenieros.listexample.utils.LogUtils.makeLogTag;
@@ -68,6 +68,7 @@ public class TutListDatabase extends SQLiteOpenHelper {
     @Override
     public void onCreate(final SQLiteDatabase db) {
         db.execSQL(DB_SCHEMA);
+        seedData(db);
 
     }
 
@@ -84,6 +85,24 @@ public class TutListDatabase extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_DATOS);
         onCreate(db);
 
+    }
+
+    /**
+     * Create sample data to use
+     * 
+     * @param db The open database
+     */
+    private void seedData(final SQLiteDatabase db) {
+        db.execSQL("insert into datos (datos_title, datos_url) values ('Best of Tuts+ in February 2011', 'http://mobile.tutsplus.com/articles/news/best-of-tuts-in-february-2011/');");
+        db.execSQL("insert into datos (datos_title, datos_url) values ('Design & Build a 1980s iOS Phone App: Design Comp Slicing', 'http://mobile.tutsplus.com/tutorials/mobile-design-tutorials/80s-phone-app-slicing/');");
+        db.execSQL("insert into datos (datos_title, datos_url) values ('Create a Brick Breaker Game with the Corona SDK: Game Controls', 'http://mobile.tutsplus.com/tutorials/corona/create-a-brick-breaker-game-with-the-corona-sdk-game-controls/');");
+        db.execSQL("insert into datos (datos_title, datos_url) values ('Exporting Graphics for Mobile Apps: PNG or JPEG?', 'http://mobile.tutsplus.com/tutorials/mobile-design-tutorials/mobile-design_png-or-jpg/');");
+        db.execSQL("insert into datos (datos_title, datos_url) values ('Android Tablet Design', 'http://mobile.tutsplus.com/tutorials/android/android-tablet-design/');");
+        db.execSQL("insert into datos (datos_title, datos_url) values ('Build a Titanium Mobile Pizza Ordering App: Order Form Setup', 'http://mobile.tutsplus.com/tutorials/appcelerator/build-a-titanium-mobile-pizza-ordering-app-order-form-setup/');");
+        db.execSQL("insert into datos (datos_title, datos_url) values ('Create a Brick Breaker Game with the Corona SDK: Application Setup', 'http://mobile.tutsplus.com/tutorials/corona/corona-sdk_brick-breaker/');");
+        db.execSQL("insert into datos (datos_title, datos_url) values ('Android Tablet Virtual Device Configurations', 'http://mobile.tutsplus.com/tutorials/android/android-sdk_tablet_virtual-device-configuration/');");
+        db.execSQL("insert into datos (datos_title, datos_url) values ('Build a Titanium Mobile Pizza Ordering App: Topping Selection', 'http://mobile.tutsplus.com/tutorials/appcelerator/pizza-ordering-app-part-2/');");
+        db.execSQL("insert into datos (datos_title, datos_url) values ('Design & Build a 1980s iOS Phone App: Interface Builder Setup', 'http://mobile.tutsplus.com/tutorials/iphone/1980s-phone-app_interface-builder-setup/');");
     }
 
 

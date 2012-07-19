@@ -49,4 +49,5 @@
         </item>
     </string-array>
     <string name="menu_settings">TutList</string>
+    <string name="authorities">com.olheingenieros.listexample.provider.TutListProvider</string>
 </resources>

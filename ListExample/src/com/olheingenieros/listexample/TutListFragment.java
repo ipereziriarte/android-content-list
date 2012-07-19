@@ -32,29 +32,56 @@
 package com.olheingenieros.listexample;
 
 import android.app.Activity;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.support.v4.widget.CursorAdapter;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
+
+import com.olheingenieros.listexample.provider.TutListDatabase;
+import com.olheingenieros.listexample.provider.TutListProvider;
 
 public class TutListFragment extends ListFragment {
     private OnTutSelectedListener tutSelectedListener;
 
     @Override
     public void onListItemClick(final ListView l, final View v, final int position, final long id) {
-        final String[] links = getResources().getStringArray(R.array.tut_links);
-
-        final String content = links[position];
-        tutSelectedListener.onTutSelected(content);
+        final String projection[] = {
+                TutListDatabase.COL_URL
+        };
+        final Cursor c = getActivity().getContentResolver().query(
+                Uri.withAppendedPath(TutListProvider.CONTENT_URI, String.valueOf(id)), projection,
+                null, null, null);
+        if (c.moveToFirst()) {
+            final String dataUrl = c.getString(0);
+            tutSelectedListener.onTutSelected(dataUrl);
+        }
+        c.close();
     }
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setListAdapter(ArrayAdapter.createFromResource(getActivity()
-                .getApplicationContext(), R.array.tut_titles,
-                R.layout.list_item));
+        final String[] projection = {
+                TutListDatabase.ID, TutListDatabase.COL_TITLE
+        };
+        final String[] uiBindFrom = {
+                TutListDatabase.COL_TITLE
+        };
+        final int[] uiBindTo = {
+                R.id.title
+        };
+
+        final Cursor c = getActivity().managedQuery(TutListProvider.CONTENT_URI, projection, null,
+                null, null);
+
+        final CursorAdapter adapter = new SimpleCursorAdapter(getActivity()
+                .getApplicationContext(), R.layout.list_item, c, uiBindFrom, uiBindTo);
+
+        setListAdapter(adapter);
     }
 
     public interface OnTutSelectedListener {
