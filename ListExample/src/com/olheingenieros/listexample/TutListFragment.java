@@ -92,6 +92,7 @@ LoaderManager.LoaderCallbacks<Cursor> {
                 CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
         setListAdapter(adapter);
+        setHasOptionsMenu(true);
     }
 
     public interface OnTutSelectedListener {
