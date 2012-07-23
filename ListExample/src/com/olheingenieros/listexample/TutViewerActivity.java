@@ -33,9 +33,10 @@ package com.olheingenieros.listexample;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 
-public class TutViewerActivity extends FragmentActivity {
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+
+public class TutViewerActivity extends SherlockFragmentActivity {
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

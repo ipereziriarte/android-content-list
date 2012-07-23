@@ -39,9 +39,10 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.support.v4.app.FragmentActivity;
 
-public class TutListActivity extends FragmentActivity implements
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+
+public class TutListActivity extends SherlockFragmentActivity implements
 TutListFragment.OnTutSelectedListener {
 
     private static final String TAG = makeLogTag(TutListActivity.class);
