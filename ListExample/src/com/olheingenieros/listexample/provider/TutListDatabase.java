@@ -33,7 +33,7 @@ public class TutListDatabase extends SQLiteOpenHelper {
     private static final String TAG = makeLogTag(TutListDatabase.class);
 
     // DB DATA
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 3;
     private static final String DB_NAME = "list_data";
 
     // TABLE DATA
@@ -41,12 +41,15 @@ public class TutListDatabase extends SQLiteOpenHelper {
     public static final String ID = "_id";
     public static final String COL_TITLE = "datos_title";
     public static final String COL_URL = "datos_url";
+    public static final String COL_DATE = "datos_date";
 
     // TABLE CREATE SQL
     private static final String CREATE_TABLE_DATOS = "CREATE TABLE " + TABLE_DATOS
             + " (" + ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + COL_TITLE + " TEXT NOT NULL, "
-            + COL_URL + " TEXT UNIQUE NOT NULL);";
+            + COL_URL + " TEXT UNIQUE NOT NULL), "
+            + COL_DATE + " INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))"
+            + ");";
     private static final String DB_SCHEMA = CREATE_TABLE_DATOS;
 
     /**
@@ -77,13 +80,22 @@ public class TutListDatabase extends SQLiteOpenHelper {
      * @see
      * android.database.sqlite.SQLiteOpenHelper#onUpgrade(android.database.sqlite
      * .SQLiteDatabase, int, int)
+     * @see http://www.sqlite.org/lang_altertable.html
      */
     @Override
     public void onUpgrade(final SQLiteDatabase db, final int oldVersion, final int newVersion) {
-        LOGW(TAG, "Upgrading Database. Existing contents will be lost. ["
-                + oldVersion + "]->[" + newVersion + "]");
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DATOS);
-        onCreate(db);
+        if (oldVersion <= 2 && newVersion == 3) {
+            LOGW(TAG, "Upgrading Database from [" + oldVersion + "] =>[3]");
+            // Keep data and add new colummns, the default value is hardcoded
+            // 'cause there're some limitations
+            db.execSQL("ALTER TABLE " + TABLE_DATOS + " ADD COLUMN " + COL_DATE
+                    + " INTEGER NOT NULL DEFAULT '1297728000' ");
+        } else {
+            LOGW(TAG, "Upgrading Database. Existing contents will be lost. ["
+                    + oldVersion + "]->[" + newVersion + "]");
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_DATOS);
+            onCreate(db);
+        }
 
     }
 

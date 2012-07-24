@@ -44,6 +44,9 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Service for downloading info from the db in background
@@ -130,6 +133,23 @@ public class TutListDownloaderService extends Service {
                                     } else if (datos.getName().equals("title")) {
                                         datos.next();
                                         tutorialData.put(TutListDatabase.COL_TITLE, datos.getText());
+                                    } else if (datos.getName().equals("pubDate")){
+                                        // Get the Date
+                                        datos.next();
+
+                                        /*
+                                         * We expect date in format
+                                         * <pubDate>Fri, 20 May 2011 11:30:23
+                                         * +0000</pubDate>
+                                         */
+                                        final DateFormat parser = new SimpleDateFormat("E, dd MMM yyyy");
+                                        try {
+                                            final Date date = parser.parse(datos.getText());
+                                            tutorialData.put(TutListDatabase.COL_DATE,
+                                                    date.getTime() / 1000);
+                                        } catch (final java.text.ParseException e) {
+                                            LOGE(TAG, "Error parsing date: " + datos.getText());
+                                        }
                                     }
                                 } else if (eventType == XmlPullParser.END_TAG) {
                                     if (datos.getName().equals("item")) {

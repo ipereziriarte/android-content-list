@@ -43,6 +43,7 @@ import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockListFragment;
 import com.actionbarsherlock.view.Menu;
@@ -51,6 +52,9 @@ import com.actionbarsherlock.view.MenuItem;
 import com.olheingenieros.listexample.provider.TutListDatabase;
 import com.olheingenieros.listexample.provider.TutListProvider;
 import com.olheingenieros.listexample.sync.TutListDownloaderService;
+
+import java.text.DateFormat;
+import java.util.Date;
 
 public class TutListFragment extends SherlockListFragment implements
 LoaderManager.LoaderCallbacks<Cursor> {
@@ -73,24 +77,26 @@ LoaderManager.LoaderCallbacks<Cursor> {
         c.close();
     }
 
+    private static final String[] UI_BINDING_FROM = {
+        TutListDatabase.COL_TITLE, TutListDatabase.COL_DATE
+    };
+    private static final int[] UI_BINDING_TO = {
+        R.id.title, R.id.date
+    };
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final String[] uiBindFrom = {
-                TutListDatabase.COL_TITLE
-        };
-        final int[] uiBindTo = {
-                R.id.title
-        };
+
 
         // Create and init cursor loader
         getLoaderManager().initLoader(TUTORIAL_LIST_LOADER, null, this);
 
         adapter = new SimpleCursorAdapter(
                 getActivity().getApplicationContext(), R.layout.list_item,
-                null, uiBindFrom, uiBindTo,
+                null, UI_BINDING_FROM, UI_BINDING_TO,
                 CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
+        adapter.setViewBinder(new TutorialViewBinder());
         setListAdapter(adapter);
         setHasOptionsMenu(true);
     }
@@ -134,6 +140,25 @@ LoaderManager.LoaderCallbacks<Cursor> {
         return true;
     }
 
+    // custom viewbinder
+    private class TutorialViewBinder implements SimpleCursorAdapter.ViewBinder {
+
+        @Override
+        public boolean setViewValue(final View view, final Cursor cursor, final int index) {
+            if (index == cursor.getColumnIndex(TutListDatabase.COL_DATE)) {
+                // get a locale based string for the date
+                final DateFormat formatter = android.text.format.DateFormat
+                        .getDateFormat(getActivity().getApplicationContext());
+                final long date = cursor.getLong(index);
+                final Date dateObj = new Date(date * 1000);
+                ((TextView) view).setText(formatter.format(dateObj));
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
     // LoaderManager.LoaderCallBacks<Cursor> methods
 
     /*
@@ -144,12 +169,19 @@ LoaderManager.LoaderCallbacks<Cursor> {
      */
     @Override
     public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
+        // Each of the columns used in the DB that we want to show
         final String[] projection = {
-                TutListDatabase.ID, TutListDatabase.COL_TITLE
+                TutListDatabase.ID, TutListDatabase.COL_TITLE, TutListDatabase.COL_DATE
         };
 
+        final Uri content = TutListProvider.CONTENT_URI;
+
+        /*
+         * Last column is the order column, we can change that when defining the
+         * provider
+         */
         final CursorLoader cursorLoader = new CursorLoader(getActivity(),
-                TutListProvider.CONTENT_URI, projection, null, null, null);
+                content, projection, null, null, TutListDatabase.COL_DATE + " desc");
         return cursorLoader;
     }
 
