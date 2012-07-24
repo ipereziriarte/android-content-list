@@ -50,4 +50,7 @@
     </string-array>
     <string name="menu_settings">TutList</string>
     <string name="authorities">com.olheingenieros.listexample.provider.TutListProvider</string>
+    <string name="notification_title">Data Updated</string>
+    <string name="notification_info_fail">Fail, there are not new Orders</string>
+    <string name="notification_info_success">Nice, new orders downloaded and parsed correctly</string>
 </resources>

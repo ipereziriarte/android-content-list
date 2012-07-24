@@ -20,12 +20,20 @@ import static com.olheingenieros.listexample.utils.LogUtils.LOGE;
 import static com.olheingenieros.listexample.utils.LogUtils.LOGW;
 import static com.olheingenieros.listexample.utils.LogUtils.makeLogTag;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 
+import com.olheingenieros.listexample.TutListActivity;
 import com.olheingenieros.listexample.provider.TutListDatabase;
 import com.olheingenieros.listexample.provider.TutListProvider;
 
@@ -47,6 +55,8 @@ public class TutListDownloaderService extends Service {
 
     private static final String TAG = makeLogTag(TutListDownloaderService.class);
     private DownloaderTask tutorialDownloader;
+
+    private static final int LIST_UPDATE_NOTIFICATION = 100;
 
     @Override
     public int onStartCommand(final Intent intent, final int flags, final int startID) {
@@ -150,9 +160,57 @@ public class TutListDownloaderService extends Service {
 
         @Override
         protected void onPostExecute(final Boolean result) {
+
+            /*
+             * Code for notifications, using notification compat builder
+             * @see
+             * http://stackoverflow.com/questions/6391870/how-exactly-to-use
+             * -notification-builder
+             */
+            final Context context = getApplicationContext();
+            final NotificationManager notificationManager = (NotificationManager) context
+                    .getSystemService(NOTIFICATION_SERVICE);
+
+            // Create PendingIntent
+            final Intent notificationIntent = new Intent(context, TutListActivity.class);
+            final PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
+                    notificationIntent, 0);
+
+            final Resources res = context.getResources();
+
+            // We create the notification using the compat library
+            final NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+
+            String contentText;
+
             if (!result) {
                 LOGW(TAG, "XML download and parse had errors");
+                contentText = context.getText(
+                        com.olheingenieros.listexample.R.string.notification_info_fail).toString();
+            } else {
+                contentText = context.getText(
+                        com.olheingenieros.listexample.R.string.notification_info_success)
+                        .toString();
             }
+
+            builder.setContentIntent(contentIntent)
+            .setSmallIcon(com.olheingenieros.listexample.R.drawable.ic_stat_sync)
+            .setLargeIcon(
+                    BitmapFactory.decodeResource(res,
+                            com.olheingenieros.listexample.R.drawable.ic_stat_sync))
+                            .setTicker(
+                                    res.getString(com.olheingenieros.listexample.R.string.notification_title))
+                                    .setWhen(System.currentTimeMillis())
+                                    .setAutoCancel(true)
+                                    .setContentTitle(
+                                            res.getString(com.olheingenieros.listexample.R.string.notification_title))
+                                            .setContentText(contentText);
+
+            // Create the notification
+            final Notification updateComplete = builder.getNotification();
+
+            // Notify the user
+            notificationManager.notify(LIST_UPDATE_NOTIFICATION, updateComplete);
         }
     }
 
