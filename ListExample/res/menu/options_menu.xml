@@ -6,4 +6,14 @@
         android:icon="@drawable/ic_menu_refresh"
         android:showAsAction="always"
         android:title="Refresh"></item>
+    <item 
+    	android:id="@+id/mark_all_read_item"
+    	android:icon="@drawable/ic_menu_mark"
+    	android:showAsAction="always"
+    	android:title="@string/mark_all_read"></item>
+    <item
+    	android:id="@+id/settings_option_item"
+    	android:icon="@drawable/ic_menu_preferences"
+    	android:showAsAction="ifRoom"
+    	android:title="@string/settings"></item>
 </menu>

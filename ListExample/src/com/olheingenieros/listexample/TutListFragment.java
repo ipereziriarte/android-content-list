@@ -51,6 +51,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.olheingenieros.listexample.provider.TutListDatabase;
 import com.olheingenieros.listexample.provider.TutListProvider;
+import com.olheingenieros.listexample.provider.TutListSharedPrefs;
 import com.olheingenieros.listexample.sync.TutListDownloaderService;
 
 import java.text.DateFormat;
@@ -130,12 +131,29 @@ LoaderManager.LoaderCallbacks<Cursor> {
         final MenuItem refresh = menu.findItem(R.id.refresh_option_item);
         refresh.setIntent(intent);
         refreshMenuId = refresh.getItemId();
+
+        // pref menu item
+        final Intent prefsIntent = new Intent(getActivity().getApplicationContext(),
+                TutListPreferencesActivity.class);
+        final MenuItem preferences = menu.findItem(R.id.settings_option_item);
+        preferences.setIntent(prefsIntent);
     }
 
+    /**
+     * Catch every item menu clicked and dispatch its action
+     */
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
-        if (item.getItemId() == refreshMenuId) {
-            getActivity().startService(item.getIntent());
+        switch (item.getItemId()) {
+            case R.id.refresh_option_item:
+                getActivity().startService(item.getIntent());
+                break;
+            case R.id.settings_option_item:
+                getActivity().startActivity(item.getIntent());
+                break;
+            case R.id.mark_all_read_item:
+                TutListProvider.markAllItemsRead(getActivity().getApplicationContext());
+                break;
         }
         return true;
     }
@@ -171,17 +189,24 @@ LoaderManager.LoaderCallbacks<Cursor> {
     public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
         // Each of the columns used in the DB that we want to show
         final String[] projection = {
-                TutListDatabase.ID, TutListDatabase.COL_TITLE, TutListDatabase.COL_DATE
+                TutListDatabase.ID, TutListDatabase.COL_TITLE, TutListDatabase.COL_DATE,
+                TutListDatabase.COL_READ
         };
 
         final Uri content = TutListProvider.CONTENT_URI;
+
+        // For preferences
+        String selection = null;
+        if (TutListSharedPrefs.getOnlyUnreadFlag(getSherlockActivity())) {
+            selection = TutListDatabase.COL_READ + " ='0'";
+        }
 
         /*
          * Last column is the order column, we can change that when defining the
          * provider
          */
         final CursorLoader cursorLoader = new CursorLoader(getActivity(),
-                content, projection, null, null, TutListDatabase.COL_DATE + " desc");
+                content, projection, selection, null, TutListDatabase.COL_DATE + " desc");
         return cursorLoader;
     }
 

@@ -53,4 +53,15 @@
     <string name="notification_title">Data Updated</string>
     <string name="notification_info_fail">Fail, there are not new Orders</string>
     <string name="notification_info_success">Nice, new orders downloaded and parsed correctly</string>
+    <string name="background_updating">Update in background</string>
+    <string name="pref_title_background_update_flag">Allow Updates</string>
+    <string name="pref_summary_background_update_flag">Syncronize data list every 15 minutes</string>
+    <string name="pref_key_flag_background_update">background_update_flag</string>
+    <string name="display_prefs">Display Preferences</string>
+    <string name="pref_summary_only_unread">Only Display Unread Items</string>
+    <string name="pref_title_only_unread">Show Unread Only</string>
+    <string name="pref_key_only_unread">only_unread_flag</string>
+    <string name="mark_all_read">Mark all as read</string>
+    <string name="settings">Settings</string>
+    <string name="empty_list_label">Currently there are not items to show</string>
 </resources>

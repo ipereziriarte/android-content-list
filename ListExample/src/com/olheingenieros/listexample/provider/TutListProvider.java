@@ -22,6 +22,7 @@ import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -213,6 +214,35 @@ public class TutListProvider extends ContentProvider {
         }
         getContext().getContentResolver().notifyChange(uri, null);
         return rowsAffected;
+    }
+
+    /**
+     * Helper to mark all items in the table as read
+     * 
+     * @param context {@link Context} A valid context
+     */
+    public static void markAllItemsRead(final Context context) {
+        final ContentValues values = new ContentValues();
+        values.put(TutListDatabase.COL_READ, "1");
+        final int updated = context.getContentResolver().update(CONTENT_URI, values,
+                TutListDatabase.COL_READ + "=0", null);
+        LOGI(TAG, "ROWS Updated: " + updated);
+
+    }
+
+    /**
+     * Helper that marks a single item, referenced by {@link Uri} as read
+     * 
+     * @param context Context A valid Context
+     * @param item long Individual item identifier
+     */
+    public static void markItemRead(final Context context, final long item) {
+        final Uri viewedData = Uri.withAppendedPath(TutListProvider.CONTENT_URI,
+                String.valueOf(item));
+        final ContentValues values = new ContentValues();
+        values.put(TutListDatabase.COL_READ, "1");
+        final int updated = context.getContentResolver().update(viewedData, values, null, null);
+        LOGI(TAG, "rows updated. Marked " + updated + " as read. ");
 
     }
 
