@@ -31,9 +31,13 @@
 
 package com.olheingenieros.listexample;
 
+import static com.olheingenieros.listexample.utils.LogUtils.LOGI;
+import static com.olheingenieros.listexample.utils.LogUtils.makeLogTag;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -55,7 +59,9 @@ import com.olheingenieros.listexample.provider.TutListSharedPrefs;
 import com.olheingenieros.listexample.sync.TutListDownloaderService;
 
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class TutListFragment extends SherlockListFragment implements
 LoaderManager.LoaderCallbacks<Cursor> {
@@ -63,19 +69,52 @@ LoaderManager.LoaderCallbacks<Cursor> {
     private static final int TUTORIAL_LIST_LOADER = 0x01;
     private SimpleCursorAdapter adapter;
 
+    private static final String TAG = makeLogTag(TutListFragment.class);
+
+    // For readed items
+    private static final String LAST_POSITION_KEY = "lastPosition";
+    private static final String LAST_ITEM_CLICKED_KEY = "lastItemClicked";
+    private static final String CUR_TUT_URL_KEY = "curTutUrl";
+
+    private long lastItemClicked = -1;
+    private String curTutUrl = null;
+    private int selectedPosition = -1;
+
     @Override
     public void onListItemClick(final ListView l, final View v, final int position, final long id) {
+        if (position == selectedPosition) {
+            // Same selection, skip
+            return;
+        }
+
         final String projection[] = {
                 TutListDatabase.COL_URL
         };
-        final Cursor c = getActivity().getContentResolver().query(
-                Uri.withAppendedPath(TutListProvider.CONTENT_URI, String.valueOf(id)), projection,
+
+        // GET viewed data uri
+        final Uri viewedTut = Uri.withAppendedPath(TutListProvider.CONTENT_URI, String.valueOf(id));
+
+        final Cursor c = getSherlockActivity().getContentResolver().query(
+                viewedTut, projection,
                 null, null, null);
         if (c.moveToFirst()) {
             final String dataUrl = c.getString(0);
             tutSelectedListener.onTutSelected(dataUrl);
         }
         c.close();
+        LOGI(TAG, "MARKING ITEM AS READ");
+
+        // Mark data as read
+        if (lastItemClicked != -1) {
+            TutListProvider.markItemRead(getSherlockActivity().getApplicationContext(),
+                    lastItemClicked);
+            LOGI(TAG, "Marking " + lastItemClicked + " as read. Now Showing " + id + ".");
+        }
+        lastItemClicked = id;
+
+        // v11+ highlights
+        selectedPosition = position;
+        l.setItemChecked(position, true);
     }
 
     private static final String[] UI_BINDING_FROM = {
@@ -87,7 +126,13 @@ LoaderManager.LoaderCallbacks<Cursor> {
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        LOGI(TAG, "On create Fragment");
+    }
 
+    // Fragment Life Cycle
+    @Override
+    public void onActivityCreated(final Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
 
         // Create and init cursor loader
         getLoaderManager().initLoader(TUTORIAL_LIST_LOADER, null, this);
@@ -100,6 +145,57 @@ LoaderManager.LoaderCallbacks<Cursor> {
         adapter.setViewBinder(new TutorialViewBinder());
         setListAdapter(adapter);
         setHasOptionsMenu(true);
+        setEmptyText(getResources().getText(R.string.empty_list_label));
+        getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+
+        if (savedInstanceState != null) {
+            lastItemClicked = savedInstanceState.getLong(LAST_ITEM_CLICKED_KEY, -1);
+            selectedPosition = savedInstanceState.getInt(LAST_POSITION_KEY, -1);
+            if (selectedPosition != -1) {
+                setSelection(selectedPosition);
+                getListView().smoothScrollToPosition(selectedPosition);
+                getListView().setItemChecked(selectedPosition, true);
+            }
+
+            curTutUrl = savedInstanceState.getString(CUR_TUT_URL_KEY);
+            if (curTutUrl != null) {
+                tutSelectedListener.onTutSelected(curTutUrl);
+            }
+
+        }
+    }
+
+    /* @var boolean */
+    private boolean showReadFlag;
+
+    @Override
+    public void onPause() {
+        showReadFlag = TutListSharedPrefs.getOnlyUnreadFlag(getSherlockActivity());
+        LOGI(TAG, "ON PAUSE");
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        LOGI(TAG, "ON RESUME");
+        if (showReadFlag != TutListSharedPrefs.getOnlyUnreadFlag(getSherlockActivity())) {
+            getLoaderManager().restartLoader(TUTORIAL_LIST_LOADER, null, this);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(final Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(LAST_ITEM_CLICKED_KEY, lastItemClicked);
+        outState.putString(CUR_TUT_URL_KEY, curTutUrl);
+        outState.putInt(LAST_POSITION_KEY, selectedPosition);
+    }
+
+    @Override
+    public void onDestroy() {
+        LOGI(TAG, "ON DESTROY");
+        super.onDestroy();
     }
 
     public interface OnTutSelectedListener {
@@ -165,11 +261,24 @@ LoaderManager.LoaderCallbacks<Cursor> {
         public boolean setViewValue(final View view, final Cursor cursor, final int index) {
             if (index == cursor.getColumnIndex(TutListDatabase.COL_DATE)) {
                 // get a locale based string for the date
-                final DateFormat formatter = android.text.format.DateFormat
-                        .getDateFormat(getActivity().getApplicationContext());
+                // final DateFormat formatter = android.text.format.DateFormat
+                // .getDateFormat(getSherlockActivity().getApplicationContext());
+                final DateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyy",
+                        Locale.getDefault());
                 final long date = cursor.getLong(index);
                 final Date dateObj = new Date(date * 1000);
                 ((TextView) view).setText(formatter.format(dateObj));
+
+                return true;
+            } else if (index == cursor.getColumnIndex(TutListDatabase.COL_READ)) {
+                final boolean read = cursor.getInt(index) > 0 ? true : false;
+                final TextView title = (TextView) view;
+                if (!read) {
+                    title.setTypeface(Typeface.DEFAULT_BOLD, 0);
+
+                } else {
+                    title.setTypeface(Typeface.DEFAULT);
+                }
                 return true;
             } else {
                 return false;

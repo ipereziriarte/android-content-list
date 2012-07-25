@@ -47,6 +47,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Service for downloading info from the db in background
@@ -142,7 +143,8 @@ public class TutListDownloaderService extends Service {
                                          * <pubDate>Fri, 20 May 2011 11:30:23
                                          * +0000</pubDate>
                                          */
-                                        final DateFormat parser = new SimpleDateFormat("E, dd MMM yyyy");
+                                        final DateFormat parser = new SimpleDateFormat(
+                                                "EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH);
                                         try {
                                             final Date date = parser.parse(datos.getText());
                                             tutorialData.put(TutListDatabase.COL_DATE,
