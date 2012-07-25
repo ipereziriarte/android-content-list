@@ -118,10 +118,10 @@ LoaderManager.LoaderCallbacks<Cursor> {
     }
 
     private static final String[] UI_BINDING_FROM = {
-        TutListDatabase.COL_TITLE, TutListDatabase.COL_DATE
+        TutListDatabase.COL_TITLE, TutListDatabase.COL_DATE, TutListDatabase.COL_READ
     };
     private static final int[] UI_BINDING_TO = {
-        R.id.title, R.id.date
+        R.id.title, R.id.date, R.id.checkBox
     };
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -272,12 +272,16 @@ LoaderManager.LoaderCallbacks<Cursor> {
                 return true;
             } else if (index == cursor.getColumnIndex(TutListDatabase.COL_READ)) {
                 final boolean read = cursor.getInt(index) > 0 ? true : false;
+                LOGI(TAG, "Leido vale " + read);
                 final TextView title = (TextView) view;
+                final TextView readed = (TextView) view;
                 if (!read) {
                     title.setTypeface(Typeface.DEFAULT_BOLD, 0);
+                    readed.setText("Loquesea");
 
                 } else {
                     title.setTypeface(Typeface.DEFAULT);
+                    readed.setText("Leido");
                 }
                 return true;
             } else {

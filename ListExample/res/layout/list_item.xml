@@ -3,7 +3,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:descendantFocusability="blocksDescendants" >
+	<TextView
+		android:id="@+id/checkBox"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/checkbox" />
 	
 	<TextView 
 		android:id="@+id/title"
@@ -11,7 +17,7 @@
 		android:layout_height="wrap_content"
 		android:textSize="24dp"
 		android:padding="6dp" />
-	
+
 	<TextView 
 		android:id="@+id/date"
 		android:layout_width="match_parent"
